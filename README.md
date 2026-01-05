@@ -40,6 +40,7 @@ flowchart LR
 - Speaker names with timestamps
 - Participant roles (internal/external)
 - Call duration, system info, and Gong links
+- **Claude Code commands** for AI-powered analysis (pain points, churn risk, portfolio insights)
 
 ## Quick Start (GitHub Action)
 
@@ -139,6 +140,25 @@ Happy to be here. Let's dive in.
 - **AI-ready**: Feed to RAG systems, LLMs, or analysis pipelines
 - **Portable**: Markdown works everywhere
 - **Organized**: Find all conversations with a specific client instantly
+
+## Claude Code Commands
+
+This repo includes [Claude Code](https://docs.anthropic.com/en/docs/claude-code) slash commands for AI-powered transcript analysis. After syncing, run these from your repo:
+
+| Command | Description |
+|---------|-------------|
+| `/analyze-transcript <file>` | Extract pain points, objections, buying signals, stakeholders, and action items from a single call |
+| `/analyze-client-history <folder>` | Synthesize all calls for one client into relationship insights, health score, and churn risk |
+| `/analyze-portfolio` | Aggregate all clients into portfolio-level insights with strategic recommendations |
+
+```bash
+# Example usage in Claude Code
+/analyze-transcript transcripts/acme-corp/2025-01-04-discovery-call.md
+/analyze-client-history transcripts/acme-corp
+/analyze-portfolio
+```
+
+The commands use parallel agents for speed — a portfolio with 50 clients spawns 50 concurrent analyses.
 
 ## Local Usage
 
