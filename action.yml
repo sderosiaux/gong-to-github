@@ -1,0 +1,105 @@
+name: "Gong to GitHub Sync"
+description: "Sync Gong call transcripts to GitHub as searchable Markdown files"
+author: "sderosiaux"
+
+branding:
+  icon: "phone"
+  color: "purple"
+
+inputs:
+  gong_access_key:
+    description: "Gong API access key"
+    required: true
+  gong_secret_key:
+    description: "Gong API secret key"
+    required: true
+  gong_api_url:
+    description: "Gong API base URL (optional, for regional instances)"
+    required: false
+  from_date:
+    description: "Start date (YYYY-MM-DD). Default: last 30 days"
+    required: false
+  to_date:
+    description: "End date (YYYY-MM-DD). Default: today"
+    required: false
+  output_folder:
+    description: "Folder to store transcripts"
+    required: false
+    default: "transcripts"
+  full_sync:
+    description: "Ignore state and re-sync all calls"
+    required: false
+    default: "false"
+  commit:
+    description: "Commit and push changes"
+    required: false
+    default: "true"
+  commit_message:
+    description: "Custom commit message"
+    required: false
+    default: ""
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+
+    - name: Install gong-sync
+      shell: bash
+      run: pip install "${{ github.action_path }}"
+
+    - name: Configure git
+      shell: bash
+      run: |
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git config user.name "github-actions[bot]"
+
+    - name: Run sync
+      shell: bash
+      env:
+        GONG_ACCESS_KEY: ${{ inputs.gong_access_key }}
+        GONG_SECRET_KEY: ${{ inputs.gong_secret_key }}
+        GONG_API_URL: ${{ inputs.gong_api_url }}
+      run: |
+        ARGS="--output-dir ${{ inputs.output_folder }}"
+
+        if [ -n "${{ inputs.from_date }}" ]; then
+          ARGS="$ARGS --from-date ${{ inputs.from_date }}"
+        fi
+
+        if [ -n "${{ inputs.to_date }}" ]; then
+          ARGS="$ARGS --to-date ${{ inputs.to_date }}"
+        fi
+
+        if [ "${{ inputs.full_sync }}" = "true" ]; then
+          ARGS="$ARGS --full-sync"
+        fi
+
+        gong-sync sync-local $ARGS
+
+    - name: Commit changes
+      if: inputs.commit == 'true'
+      shell: bash
+      run: |
+        git add "${{ inputs.output_folder }}"
+
+        if git diff --staged --quiet; then
+          echo "No changes to commit"
+          exit 0
+        fi
+
+        MSG="${{ inputs.commit_message }}"
+        if [ -z "$MSG" ]; then
+          COUNT=$(git diff --staged --numstat | wc -l | xargs)
+          MSG="Sync $COUNT transcript(s) from Gong"
+        fi
+
+        git commit -m "$MSG"
+
+    - name: Push changes
+      if: inputs.commit == 'true'
+      shell: bash
+      run: git push || echo "Nothing to push"

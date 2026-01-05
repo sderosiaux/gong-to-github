@@ -1,0 +1,26 @@
+# Example workflow - copy to your own repo's .github/workflows/sync-gong.yml
+
+name: Sync Gong Transcripts
+
+on:
+  schedule:
+    - cron: "0 6 * * *"  # Daily at 6 AM UTC
+  workflow_dispatch:      # Manual trigger
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: sderosiaux/gong-to-github@v1
+        with:
+          gong_access_key: ${{ secrets.GONG_ACCESS_KEY }}
+          gong_secret_key: ${{ secrets.GONG_SECRET_KEY }}
+          # Optional: customize output folder
+          # output_folder: "transcripts"
+          # Optional: regional API URL
+          # gong_api_url: "https://us-67600.api.gong.io"
